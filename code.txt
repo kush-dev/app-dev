@@ -1,0 +1,100 @@
+import { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { Form, Button } from 'react-bootstrap';
+
+function EditMyAccountPage() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const history = useHistory();
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await axios.get('http://localhost:4000/api/user', {
+          withCredentials: true,
+        });
+        const { firstName, lastName, email } = response.data;
+        setFirstName(firstName);
+        setLastName(lastName);
+        setEmail(email);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.put(
+        'http://localhost:4000/api/user',
+        {
+          firstName,
+          lastName,
+          email,
+          password,
+        },
+        {
+          withCredentials: true,
+          headers: {
+            authorization: `Bearer ${Cookies.get('jwt')}`,
+          },
+        }
+      );
+      console.log(response.data);
+      history.push('/dashboard');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <div className="container">
+      <h1>Edit My Account</h1>
+      <Form onSubmit={handleSubmit}>
+        <Form.Group>
+          <Form.Label>First Name</Form.Label>
+          <Form.Control
+            type="text"
+            value={firstName}
+            onChange={(event) => setFirstName(event.target.value)}
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Last Name</Form.Label>
+          <Form.Control
+            type="text"
+            value={lastName}
+            onChange={(event) => setLastName(event.target.value)}
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Email</Form.Label>
+          <Form.Control
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>New Password</Form.Label>
+          <Form.Control
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </Form.Group>
+        <Button variant="primary" type="submit">
+          Save Changes
+        </Button>
+      </Form>
+    </div>
+  );
+}
+
+export default EditMyAccountPage;
